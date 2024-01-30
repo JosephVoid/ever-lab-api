@@ -44,7 +44,8 @@ export const loadToTable = async (table:string, data: any[]) => {
         database: process.env.DB_NM, 
         password: process.env.DB_PSS
     });
-    
+    // Clear previous data
+    connection.query(`DELETE FROM ${table} WHERE 1`).catch(e => console.log(e));
     // Create Query string
     data.forEach((item) => {
         let q_string = `INSERT INTO ${table} (`;
