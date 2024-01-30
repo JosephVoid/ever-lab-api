@@ -44,6 +44,15 @@ export const loadToTable = async (table:string, data: any[]) => {
         database: process.env.DB_NM, 
         password: process.env.DB_PSS
     });
+    // Create table query formation
+    let create_string = `CREATE TABLE IF NOT EXISTS ${table} (id INT NOT NULL AUTO_INCREMENT, `
+    Object.entries(data[0]).forEach(([k, v]) => {
+        create_string += `${k} VARCHAR(1000) DEFAULT NULL, `
+    })
+    create_string += `PRIMARY KEY (id))`
+    // Create tables
+    connection.query(create_string).catch((err) => console.log(err))
+
     // Clear previous data
     connection.query(`DELETE FROM ${table} WHERE 1`).catch(e => console.log(e));
     // Create Query string

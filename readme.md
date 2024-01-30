@@ -4,7 +4,6 @@ First
 ```
 npm i
 ```
-* Create database and table according to the excel
 
 Run tests
 ```
