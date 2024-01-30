@@ -11,7 +11,7 @@ app.use(cors())
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(fileUpload());
 
-// This has to be called once
+
 app.get("/load", async (req, res) => {
     // Get the CSV files and load into variable
     let conditions_results:any  = await getCSV('conditions', ['name', 'diagnostic_metrics'])
@@ -40,11 +40,9 @@ app.get("/getTests", async (req, res) => {
         item.test.high_met = Number(metrics[0].standard_higher);
         item.test.low_met = Number(metrics[0].standard_lower);
         item.test.risky = item.test.resultValue > item.test.high_met || item.test.resultValue < item.test.low_met
-        // Push into new array
-        enh_parse.push({
-            person_name: item.person_name,
-            test: item.test
-        });
+        // Push into new array if the have relevant lookup in diagnostic metrics
+        if (metrics[0].standard_higher != "" && metrics[0].standard_lower != "")
+            enh_parse.push({person_name: item.person_name, test: item.test});
     }
     res.send(enh_parse)
 })
