@@ -3,7 +3,7 @@ import readline from "readline";
 import csvParser from 'csv-parser';
 import mysql, { RowDataPacket } from 'mysql2/promise';
 
-interface TestInformation {
+export interface TestInformation {
     testCode: string;
     testDescription: string;
     resultValue: number;
@@ -63,11 +63,11 @@ export const loadToTable = async (table:string, data: any[]) => {
     })
 }
 // Function to extract data from a PID-1 line
-function getPatientName(hl7Segment: string): string | null {
+export function getPatientName(hl7Segment: string): string | null {
     const segments: string[] = hl7Segment.split('|');
     const patientNameField: string | undefined = segments[5];
 
-    if (patientNameField) {
+    if (patientNameField && segments[0] === 'PID') {
         const patientNameComponents: string[] = patientNameField.split('^');
         const lastName: string = patientNameComponents[0];
         const firstName: string = patientNameComponents[1];
@@ -78,11 +78,11 @@ function getPatientName(hl7Segment: string): string | null {
     return null;
 }
 // Function to extract data from a OBX-5 line
-function getTestInformation(hl7Segment: string): TestInformation | null {
+export function getTestInformation(hl7Segment: string): TestInformation | null {
     const segments: string[] = hl7Segment.split('|');
     const testInfoField: string | undefined = segments[3];
 
-    if (testInfoField) {
+    if (testInfoField && segments[0] === 'OBX') {
         const testInfoComponents: string[] = testInfoField.split('^');
         const testCode: string = testInfoComponents[0];
         const testDescription: string = testInfoComponents[1];
@@ -118,14 +118,17 @@ export const ParseFile = async (hl7_txt: string):Promise<ParseFile[]> => {
         let testResult: TestInformation | null = null;
         // Event listener for each line
         rl.on('line', async (line) => {
+            // When encountering a patient ID
             if (line.includes("PID|1|")) {
                 patient_name = getPatientName(line);
             }
-            else if (line.includes("OBX|5|NM|")) {
+            // When encountering a test
+            else if (line.includes("OBX|") && line.includes("|NM|")) {
                 testResult = getTestInformation(line)
-            }
+            } 
             else 
                 null
+            // Add to final array is the result has a patient_name and test, plus it has a unique observation ID
             if (patient_name !== null && testResult !== null && parsed.filter((p) => p.test.testCode === testResult?.testCode).length == 0)
                 parsed.push({person_name: patient_name, test: testResult})
         });
